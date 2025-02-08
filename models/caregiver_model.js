@@ -22,7 +22,11 @@ const careGiverSchema = new mongoose.Schema({
     },
     list_of_patients:{
         type:[mongoose.Schema.Types.ObjectId],
-        ref:''
+        ref:'Patient'
+    },
+    list_of_post:{
+        type:[mongoose.Schema.Types.ObjectId],
+        ref:'Post'
     },
     address:{
         type:String

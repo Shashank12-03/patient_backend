@@ -1,10 +1,9 @@
-import mongoose from "mongoose";
 import { CareGiver } from "../models/caregiver_model.js";
 import { Patient } from "../models/patient_model.js";
 
 export const getCareGiver = async (req,res) => {
     const logged = await req.user;
-    console.log(logged);
+
     if (!logged) {
         return res.status(401).json({'message':'no logged user'});
     }
