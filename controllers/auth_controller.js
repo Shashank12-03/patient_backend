@@ -118,6 +118,7 @@ export const onboardPatient = async (req, res) => {
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
         req.body.password = hashedPassword;
         const newUser = await Patient.create(userData);
+        const updateCaregiver = await CareGiver.findByIdAndUpdate(userData.caregiver,{$push:{list_of_patients:newUser.id}});
         const token = jwt.sign({
             email : email,
             id : newUser._id.toString(),
