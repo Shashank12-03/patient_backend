@@ -76,6 +76,7 @@ export const getPosts = async (req,res) => {
             const element = posts[index];
             const creator = await CareGiver.findOne({ _id: element.creator });
             const data = {
+                'id':element.id,
                 'caregiverName':creator.name,
                 'caregiverPfp':creator.profile_pic_url,
                 'title':element.title,
