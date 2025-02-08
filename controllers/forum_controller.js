@@ -61,42 +61,47 @@ export const addcomment = async (req,res) => {
     }
 }
 
-export const getPosts = async (req,res) => {
-    const logged = await req.user;
-    if (!logged) {
-        return res.status(401).json({'message':'no logged user'});
-    }
-    if (logged.isPatient) {
-        return res.status(401).json({'message':'Patient cant be in the forum'});
-    }
+export const getPosts = async (req, res) => {
     try {
-        const posts = await Post.find().sort({ createdAt: -1 }).limit(10);
-        const postData = [];
-        for (let index = 0; index < posts.length; index++) {
-            const element = posts[index];
-            const creator = await CareGiver.findOne({ _id: element.creator });
-            const data = {
-                'postId':element.id,
-                'caregiverName':creator.name,
-                'caregiverPfp':creator.profile_pic_url,
-                'title':element.title,
-                'postBody':element.postBody,
-                'postImage':element.postImage,
-                'tag':element.tag,
-                'postDate': element.createdAt
-            }
-            console.log(data);
-            postData.push(data);
+        // Check if user is logged in
+        const logged = req.user;
+        if (!logged) {
+            return res.status(401).json({ message: 'No logged user' });
         }
-        
-        return res.status(200).json({'message':'posted the post',postData});
+        if (logged.isPatient) {
+            return res.status(401).json({ message: 'Patient can\'t be in the forum' });
+        }
+
+        const posts = await Post.find()
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .populate({ path: "creator", select: "name profile_pic_url" })  // Fetch creator details
+            .populate({ path: "comments.commentorId", select: "name profile_pic_url" }) // Fetch commentor details
+
+        // Transform data into the required structure
+        const postData = posts.map(post => ({
+            postId: post.id,
+            caregiverName: post.creator.name,
+            caregiverPfp: post.creator.profile_pic_url,
+            title: post.title,
+            postBody: post.postBody,
+            postImage: post.postImage,
+            comments: post.comments.map(comment => ({
+                caregiverName: comment.commentorId.name,
+                caregiverPfp: comment.commentorId.profile_pic_url,
+                comment: comment.comment
+            })),
+            tag: post.tag,
+            postDate: post.createdAt
+        }));
+
+        return res.status(200).json({ message: 'Fetched posts successfully', postData });
+
     } catch (error) {
-        return res.status(500).json({
-            message : "Internal server occured",
-            error : error.message
-        });
+        return res.status(500).json({ message: "Internal server error", error: error.message });
     }
-}
+};
+
 
 export const getComments = async (req,res) => {
     const logged = await req.user;
@@ -147,7 +152,7 @@ export const deletePost = async (req,res) => {
     try {
         await Post.findByIdAndDelete(postId);
         await CareGiver.findByIdAndUpdate(logged.id,{$pull:{list_of_post:postId}});
-        return res.status(200).json({'message':'posted the post',newPost});
+        return res.status(200).json({'message':'deleted the post'});
     } catch (error) {
         return res.status(500).json({
             message : "Internal server occured",
