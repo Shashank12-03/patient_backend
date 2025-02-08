@@ -12,12 +12,11 @@ export const getCareGiver = async (req,res) => {
         return res.status(401).json({'message':'patient found'});
     }
     try {
-        const id = new mongoose.Types.ObjectId('67a7368b06c084b1bd9ae89a');
-        const caregiverData = await CareGiver.findById(id).select('id name profile_pic_url');
+        const caregiverData = await CareGiver.findById(logged.id).select('id name profile_pic_url');
         if (!caregiverData) {
             return res.status(401).json({'message':'No data for caregiver'});
         }
-        const patientData = await Patient.find({careGiver:id}).select('id name profile_pic_url disability');
+        const patientData = await Patient.find({careGiver:logged.id}).select('id name profile_pic_url disability');
         const data = {
             'caregiverData':caregiverData,
             'patientData': patientData
