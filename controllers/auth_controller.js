@@ -1,7 +1,6 @@
 import { Patient } from '../models/patient_model.js';
 import { CareGiver } from '../models/caregiver_model.js';
 import bcrypt from 'bcrypt';
-import { validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
 
 export const loginUser = async (req, res) => {
@@ -21,8 +20,8 @@ export const loginUser = async (req, res) => {
                 emailId:email
             });
             if(!user){
-                return res.status(409).json({
-                    message : "An user with this email address already exists"
+                return res.status(404).json({
+                    message : "user not found"
                 });
             } 
             const doesMatch = bcrypt.compare(password, user.password);
@@ -33,7 +32,7 @@ export const loginUser = async (req, res) => {
             }
             token = jwt.sign({
                 email : email,
-                id : savedUser._id.toString(),
+                id : user.id.toString(),
                 isPatient : true 
             }, process.env.jwt_secret_key);
         }
@@ -42,8 +41,8 @@ export const loginUser = async (req, res) => {
                 emailId:email
             })
             if(!user){
-                return res.status(409).json({
-                    message : "An user with this email address already exists"
+                return res.status(404).json({
+                    message : "An user not found"
                 });
             } 
             const doesMatch = bcrypt.compare(password, user.password);
@@ -54,7 +53,7 @@ export const loginUser = async (req, res) => {
             }
             token = jwt.sign({
                 email : email,
-                id : savedUser._id.toString(),
+                id : user.id.toString(),
                 isPatient : false 
             }, process.env.jwt_secret_key);
         }

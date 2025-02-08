@@ -1,14 +1,14 @@
 import jwt from "jsonwebtoken";
 
+export const secret = process.env.jwt_secret_key;
 
-export const getUser = async (token,secret) => {
-    try {
-        const user = jwt.verify(token,secret);
-        if (!user) {
-            return null;
-        }
-        return user;
-    } catch (error) {
-        return res.status(500).json({'message':'Interal server error occured','error':error.message});
+export const getUser = async (token) => {
+    if (!token) {
+        return null;
     }
-}
+    try {
+        return jwt.verify(token,secret);
+    } catch (error) {
+        return null;
+    }
+};

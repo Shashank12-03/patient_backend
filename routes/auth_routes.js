@@ -5,5 +5,5 @@ export const authRoutes = Router();
 
 authRoutes.post('/add-patient',onboardPatient);
 authRoutes.post('/add-caregiver',onboardCareGiver);
-authRoutes.post('/check-user-exists',checkUserExists);
+authRoutes.get('/check-user-exists',checkUserExists);
 authRoutes.post('/login-user',loginUser);
