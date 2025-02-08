@@ -107,6 +107,7 @@ export const getComments = async (req,res) => {
         return res.status(401).json({'message':'Patient cant be in the forum'});
     }
     try {
+        const postId = req.body;
         const post = await Post.findOne(postId);
         const commentData = post.comments;
         for (let index = 0; index < commentData.length; index++) {
