@@ -83,7 +83,6 @@ export const getPosts = async (req,res) => {
                 'postBody':element.postBody,
                 'postImage':element.postImage,
                 'tag':element.tag,
-                'comments':element.comments,
                 'postDate': element.createdAt
             }
             console.log(data);
@@ -99,6 +98,37 @@ export const getPosts = async (req,res) => {
     }
 }
 
+export const getComments = async (req,res) => {
+    const logged = await req.user;
+    if (!logged) {
+        return res.status(401).json({'message':'no logged user'});
+    }
+    if (logged.isPatient) {
+        return res.status(401).json({'message':'Patient cant be in the forum'});
+    }
+    try {
+        const post = await Post.findOne(postId);
+        const commentData = post.comments;
+        for (let index = 0; index < commentData.length; index++) {
+            const element = commentData[index];
+            const creator = await CareGiver.findOne({ _id: element.commentorId });
+            const data = {
+                'caregiverName':creator.name,
+                'caregiverPfp':creator.profile_pic_url,
+                'comment':element.comment,
+            }
+            console.log(data);
+            postData.push(data);
+        }
+        
+        return res.status(200).json({'message':'posted the post',postData});
+    } catch (error) {
+        return res.status(500).json({
+            message : "Internal server occured",
+            error : error.message
+        });
+    }
+}
 
 
 export const deletePost = async (req,res) => {
