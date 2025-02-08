@@ -1,0 +1,32 @@
+{
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-validator": "^7.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "patient_backend": "file:",
+    "mongoose": "^8.9.5",
+    "nodemon": "^3.1.9" 
+  },
+  "name": "patient_backend",
+  "version": "1.0.0",
+  "description": "A user-friendly healthcare app that organizes medical records, offers personalized health guidance via \"Salus,\" and sends reminders for medications and appointments—ensuring stress-free and secure health management.",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon --env-file=.env app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shashank12-03/patient_backend.git"
+  },
+  "author": "Rohit B. Bhandwalkar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Shashank12-03/patient_backend/issues"
+  },
+  "homepage": "https://github.com/Shashank12-03/patient_backend#readme"
+}
