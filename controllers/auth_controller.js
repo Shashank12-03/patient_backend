@@ -113,25 +113,24 @@ export const onboardPatient = async (req, res) => {
         return res.status(401).json({'message':'userdata is needed to proceed further'})
     }
     try{
-        
+
         const email = userData.email;
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
         req.body.password = hashedPassword;
-        const newUser = new Patient(userData);
-        const savedUser = await newUser.save();
+        const newUser = await Patient.create(userData);
         const token = jwt.sign({
             email : email,
-            id : savedUser._id.toString(),
+            id : newUser._id.toString(),
             isPatient : true 
         }, process.env.jwt_secret_key);
 
         return res.status(200).json({
             message : "User logged in",
             token : token,
-            name : savedUser.name,
+            name : newUser.name,
             isPatient : true, 
-            profilePictureUrl : savedUser.profile_picture
+            profilePictureUrl : newUser.profile_picture
         });
 
     } catch (err) {
