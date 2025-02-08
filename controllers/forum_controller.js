@@ -71,7 +71,25 @@ export const getPosts = async (req,res) => {
     }
     try {
         const posts = await Post.find().sort({ createdAt: -1 }).limit(10);
-        return res.status(200).json({'message':'posted the post',posts});
+        const postData = [];
+        for (let index = 0; index < posts.length; index++) {
+            const element = posts[index];
+            const creator = await CareGiver.findOne({ _id: element.creator });
+            const data = {
+                'caregiverName':creator.name,
+                'caregiverPfp':creator.profile_pic_url,
+                'title':element.title,
+                'postBody':element.postBody,
+                'postImage':element.postImage,
+                'tag':element.tag,
+                'comments':element.comments,
+                'postDate': element.createdAt
+            }
+            console.log(data);
+            postData.push(data);
+        }
+        
+        return res.status(200).json({'message':'posted the post',postData});
     } catch (error) {
         return res.status(500).json({
             message : "Internal server occured",
