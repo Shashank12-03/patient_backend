@@ -1,7 +1,5 @@
 import { Router } from "express";
 import { addPrescription, deletePrescription, getPrescriptions, getPrescriptionsByFilter } from "../controllers/prescription_controller.js";
-import { validateRequest } from "../middleware/validate_request.js";
-import {check} from "express-validator";
 
 export const prescriptionRoutes = Router();
 

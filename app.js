@@ -6,6 +6,7 @@ import { authRoutes } from './routes/auth_routes.js';
 import { checkAuthentication } from './middleware/auth.js';
 import { careGiverRoutes } from './routes/careGiver_routes.js';
 import { forumRoutes } from './routes/forum_routes.js';
+import { prescriptionRoutes } from './routes/prescription_routes.js';
 
 dotenv.config();
 const PORT = process.env.PORT;
@@ -24,6 +25,7 @@ app.use(bodyParser.json());
 app.use('/auth',authRoutes);
 app.use('/caregiver',checkAuthentication,careGiverRoutes);
 app.use('/forum',checkAuthentication,forumRoutes);
+app.use('/prescriptions',checkAuthentication,prescriptionRoutes);
 
 // listen to the server
 app.listen(PORT,()=> console.log(`Server running on port ${PORT}`));

@@ -1,7 +1,6 @@
 import { Prescriptions } from "../models/prescriptions_model.js";
-import User from "../models/user_model.js";
-import { getUserbyId } from "../services/getUser.js";
-import mongoose from "mongoose";
+
+import { Patient } from "../models/patient_model.js";
 
 export const addPrescription = async (req,res) => {
 
@@ -13,31 +12,61 @@ export const addPrescription = async (req,res) => {
     
     try {
 
-        const {branch, doctor_detail, disease, description, date_of_visit, prescription, supporting_documents} = req.body;
-        if (!branch || !doctor_detail || !disease || !prescription) {
-            return res.status(400).json({'message':'Either of branch, doctor name, disease, prescriptions url is missing'});
+        const { patientId, branch, doctor_name, disease, description, date_of_visit, prescription, supporting_documents } = req.body;
+
+        if (!branch || !doctor_name || !disease || !prescription) {
+            return res.status(400).json({ message: 'Missing required fields: branch, doctor_name, disease, prescription' });
+        }
+
+        const token = req.headers.authorization?.split(' ')[1];
+
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+            // Fetch doctor details
+        const doctorApiUrl = `http://127.0.0.1:8000/doctor/search-doctor/search?doctor_name=${doctor_name}`;
+        const response = await fetch(doctorApiUrl, { method: "GET", headers });
+
+        if (!response.ok) {
+            throw new Error(`Doctor API error: ${response.statusText}`);
         }
         
+        const data = await response.json();
+        console.log(data);
+        if (!data || data.length === 0) {
+            return res.status(404).json({ message: 'Doctor not found' });
+        }
+        const doctorList = data.doctorList;
+        // Extract relevant doctor details
+        const doctor_detail = {
+            doctor_id: doctorList[0]._id,  // Store only necessary fields
+            doctor_name: doctorList[0].name,
+        };
+        console.log(doctor_detail);
+        // Store prescription
         const newPrescription = await Prescriptions.create({
-            patient:loggedUser.id,
+            patient: patientId,
             branch,
-            doctor_detail,
+            doctor_detail,  // Now correctly formatted
             disease,
             description,
             date_of_visit,
             prescription,
             supporting_documents
         });
+        
+        // Response object
         const sendPrescription = {
-            'disease' : newPrescription.disease,
-            'description' : newPrescription.description,
-            'doctor_name' : newPrescription.doctor_name,
-            'date_of_visit' : newPrescription.date_of_visit,
-            'branch' : newPrescription.branch,
-            'prescription' : newPrescription.prescription,
-            'supporting_documents' : newPrescription.supporting_documents
+            disease: newPrescription.disease,
+            description: newPrescription.description,
+            doctor_name: newPrescription.doctor_detail.name,  // Fixed this
+            date_of_visit: newPrescription.date_of_visit,
+            branch: newPrescription.branch,
+            prescription: newPrescription.prescription,
+            supporting_documents: newPrescription.supporting_documents
         };
-        const updateUser = await User.findByIdAndUpdate(loggedUser.id,{$push:{prescriptions:newPrescription.id}},{new:true});
+        const updateUser = await Patient.findByIdAndUpdate(patientId,{$push:{prescriptions:newPrescription.id}},{new:true});
         return res.status(201).json({'message':'New Prescription created', 'prescription' : sendPrescription});
 
     } catch (error) {
@@ -82,12 +111,11 @@ export const getPrescriptions = async (req,res) => {
     }
 
     try {
-        const userPrescriptions = await Prescriptions.find({user:loggedUser.id});
+        const userPrescriptions = await Prescriptions.find({user:loggedUser.id}).populate({ path: "patient", select: "name profile_pic_url" });
+        // const userPrescription = 
         if (!userPrescriptions) {
-
             return res.status(400).json({'message':`No data exist`});
-        }
-
+        } 
         return res.status(200).json({'message':'For user this are the prescriptions',userPrescriptions});
 
     } catch (error) {

@@ -7,9 +7,6 @@ const prescriptionsSchema = new  mongoose.Schema({
         ref: 'Patient',
         required: true
     },
-    addedByPatient:{
-        type:Boolean
-    },
     branch: {
         type: String,
         enum: [
