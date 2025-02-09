@@ -1,6 +1,7 @@
 import { Prescriptions } from "../models/prescriptions_model.js";
 
 import { Patient } from "../models/patient_model.js";
+import { CareGiver } from "../models/caregiver_model.js";
 
 export const addPrescription = async (req,res) => {
 
@@ -104,27 +105,55 @@ export const getPrescriptionsByFilter = async (req,res) => {
     }
 }
 
-export const getPrescriptions = async (req,res) => {
-    const loggedUser = await req.user;
+export const getPrescriptions = async (req, res) => {
+    const loggedUser = req.user;
     if (!loggedUser) {
-        return res.status(401).json({'message':'No login user found'});
+        return res.status(401).json({ message: "No login user found" });
     }
 
     try {
-        const userPrescriptions = await Prescriptions.find({user:loggedUser.id}).populate({ path: "patient", select: "name profile_pic_url" });
-        // const userPrescription = 
-        if (!userPrescriptions) {
-            return res.status(400).json({'message':`No data exist`});
-        } 
-        return res.status(200).json({'message':'For user this are the prescriptions',userPrescriptions});
+        // Fetch all patients linked to this caregiver, including their prescriptions
+        const patients = await Patient.find({ careGiver: loggedUser.id }).select("name profile_pic_url prescriptions");
+
+        // Extract all prescription IDs from the patients
+        const prescriptionIds = patients.flatMap(patient => patient.prescriptions);
+
+        if (prescriptionIds.length === 0) {
+            return res.status(404).json({ message: "No prescriptions found for the patients" });
+        }
+
+        // Fetch all prescriptions in one query
+        const prescriptions = await Prescriptions.find({ _id: { $in: prescriptionIds } })
+            .select("id branch patient doctor_detail disease description date_of_visit prescription supporting_documents")
+            .lean();
+
+        // Map prescriptions to respective patients
+        const dataToSend = patients.map(patient => {
+            const patientPrescriptions = prescriptions.filter(prescription => 
+                patient.prescriptions.includes(prescription._id.toString())
+            );
+
+            return {
+                patient_name: patient.name,
+                patient_profile_pic_url: patient.profile_pic_url,
+                prescriptions: patientPrescriptions
+            };
+        });
+
+        return res.status(200).json({
+            message: "Prescriptions retrieved successfully",
+            data: dataToSend
+        });
 
     } catch (error) {
         return res.status(500).json({
-            message : "Internal server occured",
-            error : error.message
+            message: "Internal server error",
+            error: error.message,
         });
     }
-}
+};
+
+
 
 export const deletePrescription = async (req,res) => {
     const loggedUser = await req.user;
